@@ -40,4 +40,4 @@ User-Defined Functions (UDFs): Use UDFs to apply custom masking functions to Dat
 
 ### Masked Data Output:
 
-Output: Save or export the masked DataFrame for further processing or analysis, ensuring that sensitive data is anonymized.
+**Output:** Save or export the masked DataFrame for further processing or analysis, ensuring that sensitive data is anonymized.
