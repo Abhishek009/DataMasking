@@ -1,12 +1,7 @@
 # DataMasking
 
-![Java CI](https://github.com/Abhishek009/DataMasking/workflows/Java%20CI/badge.svg)
-![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
-![maven central](https://img.shields.io/maven-central/v/com.github.yourusername/your-artifact-id.svg)
-![javadoc](https://javadoc.io/badge/com.github.yourusername/your-artifact-id.svg)
 
-
-Project Purpose: The primary objective of this data masking project is to anonymize sensitive data in Big Data environments, ensuring privacy and compliance with regulations. This project leverages Scala, Apache Spark, and the Java-FPE library to perform data masking efficiently across large datasets.
+The primary objective of this data masking project is to anonymize sensitive data in Big Data environments, ensuring privacy and compliance with regulations. This project leverages Scala, Apache Spark, and the Java-FPE library to perform data masking efficiently across large datasets.
 ## Technologies:
 
 ### Scala: 
