@@ -1,26 +1,27 @@
 package org.scala.datamasking
 
-import org.apache.log4j.Logger
-
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+
 import java.util.Properties
 import scala.io.Source
 
 object DataMasking {
 
   def addPrefix(df: DataFrame,column: String): DataFrame = {
-    //df.schema.map(x => println(x))
     df.schema(column).dataType match {
       case StringType => df.withColumn(column, when(length(col(column)) < 6, concat(expr("repeat('X', 6 - length(" + column + "))"), col(column))).when(length(col(column)) > 28,substring(col(column),0,28)).otherwise(col(column)))
       case IntegerType => df.withColumn(column, when(length(col(column).cast(StringType)) < 6, lpad(col(column).cast(StringType), 6, "0")).when(length(col(column).cast(StringType)) > 28,substring(col(column),0,28)).otherwise(column))
-      case ShortType => df.withColumn(column, when(length(col(column).cast(StringType)) < 6, rpad(col(column).cast(StringType), 6, "0")).when(length(col(column).cast(StringType)) > 28,substring(col(column),0,28)).otherwise(column))
+      case ShortType => df.withColumn(column, when(length(col(column).cast(StringType)) < 6, lpad(col(column).cast(StringType), 6, "0")).when(length(col(column).cast(StringType)) > 28,substring(col(column),0,28)).otherwise(column))
       case _ => df
     }
   }
 
   def main(args: Array[String]): Unit = {
+
+    val logger = Logger.getLogger(this.getClass)
 
     val alphabet: Map[String, String] = Map(
       "DIGITS"-> "0123456789",
@@ -29,7 +30,7 @@ object DataMasking {
       "EMAIL"->"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@._"
     )
 
-    val logger = Logger.getLogger(this.getClass)
+
     val spark = SparkSession.builder().appName("DataRefresh")
       .master("local").getOrCreate()
 
@@ -43,10 +44,10 @@ object DataMasking {
     val tweak = "CBD09280979564" //properties.getProperty("fpe.tweak")
     logger.info(s"Source DB is $sourceDbType")
     logger.info(s"Target DB is $targetDbType")
-    println(properties.getProperty("source.tables"))
-    println(properties.getProperty("jdbc.url"))
-    println(properties.getProperty("jdbc.user"))
-    println(properties.getProperty("jdbc.password"))
+    logger.info(properties.getProperty("source.tables"))
+    logger.info(properties.getProperty("jdbc.url"))
+    logger.info(properties.getProperty("jdbc.user"))
+    logger.info(properties.getProperty("jdbc.password"))
     logger.info(s"Trying to connect to source db")
     try{
       val extractor = DataExtractorFactory.getExtractor(sourceDbType, properties)  //extractor.extract(spark, properties, "input_modal")
@@ -57,7 +58,7 @@ object DataMasking {
 
         val columnType = extractedDf.schema.map{ x => x.name-> x.dataType }.toMap
 
-        println(columnType)
+        logger.info(columnType)
         // Apply masking based on manifest configuration
         val maskedDf = extractedDf.columns.foldLeft(extractedDf) {
           (df, columnName) =>
@@ -68,7 +69,7 @@ object DataMasking {
               val dfWithColumnLengthFixed = addPrefix(df,columnName)
               dfWithColumnLengthFixed.show()
               var customAlphabet = Option(properties.getProperty(s"column.$columnName.custom_alphabet", null))
-              println(s"===================${customAlphabet}")
+              logger.info(s"Custom Alphabet provided as $customAlphabet")
               if (customAlphabet != null) {
                 customAlphabet = columnType.get(columnName) match {
                   case Some(IntegerType) => Some(alphabet.getOrElse("DIGITS",""))
@@ -86,7 +87,7 @@ object DataMasking {
               )
             }else df
         }
-        maskedDf.show(false);
+        maskedDf.show(false)
         logger.info(s"Table $tableName processed succesfully")
       }
     }catch {
